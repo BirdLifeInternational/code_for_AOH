@@ -20,7 +20,7 @@ Species range maps were saved as geopackages (a single geopackage per species).
 Once you download the data you will need to modify the folder structure as needed.
 
 
-## IUCN Red List Habitats Classification Scheme {#habitatclassificationscheme}
+## IUCN Red List Habitats Classification Scheme 
 
 The IUCN Red List Habitats Classification Scheme ([Version 3.1](https://www.iucnredlist.org/resources/habitat-classification-scheme#:~:text=Suitability%20options%20are%3A,unknown%20importance%20to%20the%20species)) includes 18 broad Level 1 habitat categories, and a much larger number of Level 2 and 3 sub-categories.
 
@@ -32,7 +32,7 @@ We match the seasonality options to the seasonality values from the range maps (
 
 
 
-## Range maps {#range_maps}
+## Range maps 
 
 Each species range map from the IUCN Red List may comprise multiple polygons. 
 Each polygon has attributes for presence, origin and seasonality (IUCN 2021) ([https://nc.iucnredlist.org](https://nc.iucnredlist.org/redlist/content/attachment_files/Mapping_Standards_Version_1.19_2021.pdf)).
