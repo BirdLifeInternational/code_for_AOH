@@ -203,6 +203,8 @@ for(i in 1:length(ordered_gpkg)){
     spp_range_data <- read_sf(spp)
     st_geometry(spp_range_data) <- "geometry"
     
+    if(any(names(spp_range_data) == "terrestial")) names(spp_range_data)[names(spp_range_data) == "terrestial"] <- "terrestrial"
+    
       spp_range_data$terrestrial <- rep("true", nrow(spp_range_data))
       spp_range_data$marine <- rep("false", nrow(spp_range_data))
       spp_range_data$freshwater <- rep("false", nrow(spp_range_data))
