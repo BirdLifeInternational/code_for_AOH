@@ -15,5 +15,5 @@ verbose_value <- FALSE # set to FALSE if you don't want aoh pckg to display prog
 n_threads <- parallel::detectCores() - 1 
 cache_limit <- 5000 # set to 5000 when running the whole species. 
 ###### Source the code #######
-source("rscripts/aoh_jeff_4wcmc/src_files/aoh_4wcmc.R")
+source("rscripts/aoh_jeff_4wcmc/src_files/aoh_with_foreach.R")
 
