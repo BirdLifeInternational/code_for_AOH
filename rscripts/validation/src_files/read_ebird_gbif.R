@@ -25,6 +25,9 @@ spp_summary_birds_mammals <- read_csv(paste0("../aoh_out/cache_dir/manual_downlo
                                       ),
                                       show_col_types =  F)  %>% janitor::clean_names()
 spp_summary_birds_mammals <- unique(spp_summary_birds_mammals[, c("id_no", "binomial")])
+ancillary <- read_csv("../IUCN_data/NOT_to_be_committed/BOTW/attribute_table/ancillary_taxonomy.csv")[, c("SISID", "Scientific_name")]
+names(ancillary) <- c("id_no", "binomial")
+spp_summary_birds_mammals <- unique(rbind(spp_summary_birds_mammals, ancillary))
 points <- merge(points, spp_summary_birds_mammals, by = "binomial", all = T)
 dim(points[is.na(LONGITUDE),])
 dim(points[is.na(id_no),])
