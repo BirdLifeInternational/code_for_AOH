@@ -1,8 +1,10 @@
 #' Set directory and load files
 if(.Platform$OS.type == "unix") {
   machine <- "linux" # or "windows"
+  eng <- "gdal"
 } else {
   machine <- "windows"
+  eng <- "terra"
 }
 
 #### st_write requires a driver ####

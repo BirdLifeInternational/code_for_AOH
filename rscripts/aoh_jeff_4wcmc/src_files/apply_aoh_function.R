@@ -14,7 +14,7 @@ if(str_detect(type, "FRC")){
                                  cache_dir = cache_dir, 
                                  cache_limit = cache_limit,
                                  verbose = verbose_value,
-                                 engine = "gdal")
+                                 engine = eng)
 } else if (str_detect(type, "LR")){
   spp_aoh <- create_spp_aoh_data(x = spp_info_data,
                                  elevation_data = elevation_data,
@@ -25,7 +25,7 @@ if(str_detect(type, "FRC")){
                                  cache_dir = cache_dir, 
                                  cache_limit = cache_limit,
                                  verbose = verbose_value,
-                                 engine = "gdal")
+                                 engine = eng)
 } else {
   stop("No type specified")
 }
