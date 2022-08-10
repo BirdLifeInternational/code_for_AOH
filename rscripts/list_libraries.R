@@ -25,7 +25,8 @@ library(rlist)
 
 library(foreach) 
 library(cluster)
-library(doParallel)
+#library(doParallel)
+library(doSNOW)
 
 # library(aoh)
 # library(terra)
