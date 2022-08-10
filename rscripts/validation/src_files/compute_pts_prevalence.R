@@ -55,10 +55,16 @@ foreach (i = 1:length(ids_to_process), .errorhandling = 'pass') %dopar% {
     # exclude species with less than 50 DATA POINTS!
     tmp <- data.table(id_no = taxon_id, seasonality = type,
                       pts_unsuitable = NA, pts_suitable = NA, 
-                      pts_available = "no", raster_name = path_ras)
+                      pts_available = "no", raster_name = path_ras, 
+                      total_number_pts = ddims,
+                      number_pts_outside_aoh = NA)
     fwrite(tmp, file = paste0(out_tmp_rast, taxon_id, ".csv"))
   } else {
     # Process the species with 50+ data points
+    if(file.exists(res)) { aoh <- rast(res)
+    } else if(file.exists(both)){ aoh <- rast(both)
+    } else { print("no aoh raster found") }
+    
     spp_points <- sf::st_as_sf(spp_points, coords = c("LONGITUDE", "LATITUDE"),
                                crs = wgs_84_crs)
     spp_points <- st_transform(spp_points, crs = wb_crs)
@@ -66,19 +72,14 @@ foreach (i = 1:length(ids_to_process), .errorhandling = 'pass') %dopar% {
     buffered <- st_buffer(spp_points, 300)
     vsp <- as(buffered, "Spatial")
     buffered <- vect(vsp)
-    rm(spp_points, vsp)
-    
-    if(file.exists(res)) { aoh <- rast(res)
-    } else if(file.exists(both)){ aoh <- rast(both)
-    } else {
-      print("no aoh raster found")
-    }
+    rm(vsp, spp_points)
     
     if(crs(aoh, proj = T) != crs(buffered, proj=T)){
       print(paste0("Non corresponding crs!"));
     }
     # remove all buffered points outside the range map 
     cropped <- terra::crop(buffered, aoh)
+    number_inside_points <- nrow(cropped)
     # mask the aoh on the points
     masked <- terra::mask(aoh, cropped, touches = TRUE)
     # ext(aoh)
@@ -89,13 +90,14 @@ foreach (i = 1:length(ids_to_process), .errorhandling = 'pass') %dopar% {
     su <- subset(frq, value == 1)$count
     tmp <- data.table(id_no = taxon_id, seasonality = type,
                       pts_unsuitable = unsu, pts_suitable = su, 
-                      pts_available = "yes", raster_name = path_ras)
+                      pts_available = "yes", raster_name = path_ras,
+                      total_number_pts = ddims,
+                      number_pts_outside_aoh = (ddims - number_inside_points))
     fwrite(tmp, file = paste0(out_tmp_rast, taxon_id, ".csv"))
     rm(cropped, masked, su, unsu, tmp, res, both, aoh)
   }
   print(paste0("Processed ", taxon_id))
 }
-
 doParallel::stopImplicitCluster()
 
 ########## read in results of point and model prevalence ############
