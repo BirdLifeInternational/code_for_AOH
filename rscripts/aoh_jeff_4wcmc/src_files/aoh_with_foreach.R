@@ -107,7 +107,7 @@ tmp_name <- str_replace_all(tmp_name, "/", "_")
 #"================================================================"
 #"================================================================"
 ##### start for loop#####
-for_loop <- foreach(i=1:15, #length(ordered_gpkg),
+for_loop <- foreach(i=1:length(ordered_gpkg),
                     .errorhandling='pass') %do% {
   skip_to_next <- FALSE
   
