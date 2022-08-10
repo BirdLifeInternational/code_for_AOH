@@ -2,14 +2,15 @@
 #' 
 #' 
 #### lookup paths #####
-model_prev_loc <- paste0("../aoh_out/output_R/", class, "/lumbierres_LR/area/")
-ras_loc <- paste0("../aoh_out/output_R/", class, "/lumbierres_LR/")
+model_prev_loc <- paste0("../aoh_out/output_R/", class, "/", type, "area/")
+ras_loc <- paste0("../aoh_out/output_R/", class, "/", type)
 ### set output directories######
 out_dir <- "../aoh_out/output_R/validation/point_prevalence/"
-out_class <- paste0(out_dir, class, "/")
-out_tmp_rast <- paste0(out_class, "tmp_rasters_points/")
+out_class <- paste0(out_dir, class, "/", type)
+out_tmp_rast <- paste0(out_class, "tmp_rasters_points_", type)
 if(!dir.exists("../aoh_out/output_R/validation/")) dir.create("../aoh_out/output_R/validation/")
 if(!dir.exists(out_dir)) dir.create(out_dir)
+if(!dir.exists(paste0(out_dir, class, "/"))) dir.create(paste0(out_dir, class, "/"))
 if(!dir.exists(out_class)) dir.create(out_class)
 if(!dir.exists(out_tmp_rast)) dir.create(out_tmp_rast)
 #### used projections crs ####
@@ -61,10 +62,19 @@ foreach (i = 1:length(ids_to_process), .errorhandling = 'pass') %dopar% {
     fwrite(tmp, file = paste0(out_tmp_rast, taxon_id, ".csv"))
   } else {
     # Process the species with 50+ data points
-    if(file.exists(res)) { aoh <- rast(res)
-    } else if(file.exists(both)){ aoh <- rast(both)
-    } else { print("no aoh raster found") }
+    if(file.exists(res)) { aoh <- rast(res); ras_missing <- 0
+    } else if(file.exists(both)){ aoh <- rast(both); ras_missing <- 0
+    } else { ras_missing <- 1; print("no aoh raster found") }
     
+    if(ras_missing == 1){
+      # tmp <- data.table(id_no = taxon_id, seasonality = NA,
+      #                   pts_unsuitable = NA, pts_suitable = NA, 
+      #                   pts_available = NA, raster_name = NA,
+      #                   total_number_pts = NA,
+      #                   number_pts_outside_aoh = NA)
+      # fwrite(tmp, file = paste0(out_tmp_rast, taxon_id, ".csv"))
+      stop(" No raster, skip to next")
+    }
     spp_points <- sf::st_as_sf(spp_points, coords = c("LONGITUDE", "LATITUDE"),
                                crs = wgs_84_crs)
     spp_points <- st_transform(spp_points, crs = wb_crs)
@@ -136,8 +146,9 @@ unique(vali$bird_or_mammal)
 vali <- vali[, c("raster_name", "id_no", "scientific_name",
                  "bird_or_mammal", "type", "observed_md_prevalence",
                  "pts_prevalence", "better_than_random" )]
-fwrite(vali, file= paste0(out_dir, class, "_point_prevalence_results.csv"))
+type <- str_remove_all(type, "\\/")
+fwrite(vali, file= paste0(out_dir, class, "_", type, "_point_prevalence_results.csv"))
 
-
+unlink(out_tmp_rast, recursive = TRUE)
 
 
