@@ -36,5 +36,5 @@ dim(points)
 points <- subset(points, !is.na(LONGITUDE))
 points <- subset(points, !is.na(id_no))
 points <- points[, c("binomial", "LONGITUDE", "LATITUDE", "id_no")]
-rm(spp_summary_birds_mammals)
+rm(spp_summary_birds_mammals, ancillary)
 
