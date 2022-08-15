@@ -14,14 +14,15 @@ names(attribute_table) <- c("shp_binomial", "shp_id_no")
 ######## API ##########
 
 el_passeriformes <- read.csv(paste0(cache_dir, 
-                                    "manual_download/habitat_iucn/redlist_species_data_birds_passeriformes/all_other_fields.csv")) %>% clean_names()
+                                    "manual_download/habitat_iucn/redlist_species_data_birds_passeriformes/all_other_fields.csv")) %>% 
+  janitor::clean_names()
 cat_passeriformes <- read.csv(paste0(cache_dir, 
-                                     "manual_download/habitat_iucn/redlist_species_data_birds_passeriformes/assessments.csv")) %>% clean_names()
+                                     "manual_download/habitat_iucn/redlist_species_data_birds_passeriformes/assessments.csv")) %>% janitor::clean_names()
 
 el_other_birds <- read.csv(paste0(cache_dir, 
-                                  "manual_download/habitat_iucn/redlist_species_data_birds_except_passeriformes/all_other_fields.csv")) %>% clean_names()
+                                  "manual_download/habitat_iucn/redlist_species_data_birds_except_passeriformes/all_other_fields.csv")) %>% janitor::clean_names()
 cat_other_birds <- read.csv(paste0(cache_dir, 
-                                   "manual_download/habitat_iucn/redlist_species_data_birds_except_passeriformes/assessments.csv")) %>% clean_names()
+                                   "manual_download/habitat_iucn/redlist_species_data_birds_except_passeriformes/assessments.csv")) %>% janitor::clean_names()
 
 el_all_birds_api <- rbind(el_passeriformes, el_other_birds)
 api_elevation <-  rbind(el_passeriformes, el_other_birds)
@@ -68,14 +69,14 @@ unique(api_shp2$api_binomial == api_shp2$shp_binomial)
 
 ############ j folder ##############
 j_folder_habitat <- readxl::read_excel("../IUCN_data/habitat_preferences/BL_Habitats_2021.xlsx",
-                                       na = "NA") %>% clean_names()
+                                       na = "NA") %>% janitor::clean_names()
 j_folder_habitat <- unique(j_folder_habitat[, c("sis_id", "scientific_name",  "common_name")])
 j_folder_habitat <- j_folder_habitat[order(j_folder_habitat$sis_id),]
 names(j_folder_habitat) <- c("hab_sis_id", "hab_binomial", "hab_common")
 
 j_folder_elevation <- readxl::read_excel("../IUCN_data/habitat_preferences/Updated_elevation_data_for_birds_30_Nov_2021_for_WCMC.xlsx",
                                          col_types = c("guess", rep("numeric", 5)),
-                                         na = "NA") %>% clean_names()
+                                         na = "NA") %>% janitor::clean_names()
 j_folder_elevation <- unique(j_folder_elevation[, c("bird_life_scientific_name_2020","sis_rec_id")])
 j_folder_elevation <- j_folder_elevation[order(j_folder_elevation$sis_rec_id),]
 names(j_folder_elevation) <- c("el_binomial", "el_sis_id")
@@ -104,7 +105,8 @@ unique(api_habitat$hab_binomial == api_habitat$api_binomial)
 # so the habitat data and api have the same ids!
 ############### synonyms taxonomy ############
 
-syn <- read.csv("cache_dir/manual_download/habitat_iucn/redlist_species_data_birds_except_passeriformes/synonyms.csv")
+syn <- read.csv(
+  "../aoh_out/cache_dir/manual_download/habitat_iucn/redlist_species_data_birds_except_passeriformes/synonyms.csv")
 
 syn$synonym <- str_c(syn$genusName, syn$speciesName, sep = " ")
 syn[which(str_sub(syn$synonym,-1,-1)== " "), "synonym"] <- 
@@ -137,7 +139,7 @@ check[!is.na(check$syn_synonym),]
 different_names <- unique(different_names)
 dim(different_names)
 length(unique(different_names$api_id))
-write.csv(different_names[, c("api_binomial",	"api_id",	"el_binomial")], file = "cache_dir/elevation_file_inconsistencies/different_scientific_names_but_same_ids.csv", row.names = F)
+write.csv(different_names[, c("api_binomial",	"api_id",	"el_binomial")], file = "../aoh_out/cache_dir/elevation_file_inconsistencies/different_scientific_names_but_same_ids.csv", row.names = F)
 
 
 
@@ -150,7 +152,7 @@ tmp <- tmp[order(tmp$api_binomial),]
 tmp_na <- tmp[is.na(tmp$api_id),]
 tmp_comp <- tmp[!is.na(tmp$api_id),]
 tmp_comp$el_binomial <- rep("same scientific name", nrow(tmp_comp))
-write.csv(tmp_comp[, c("api_binomial",	"api_id",	"el_binomial",	"el_sis_id")], file = "cache_dir/elevation_file_inconsistencies/same_scientific_name_but_different_ids.csv",
+write.csv(tmp_comp[, c("api_binomial",	"api_id",	"el_binomial",	"el_sis_id")], file = "../aoh_out/cache_dir/elevation_file_inconsistencies/same_scientific_name_but_different_ids.csv",
           row.names = F)
 tmp_na$el_binomial <- tmp_na$api_binomial
 api_na <- api[api$api_binomial %in% c("Calendulauda africanoides", "Mirafra somalica", "Acridotheres melanopterus"),]
@@ -172,7 +174,7 @@ adding <- data.frame(api_assessment_id = NA,
   el_binomial = "Acridotheres tricolor", 
     el_sis_id = subset(j_folder_elevation, el_binomial == "Acridotheres tricolor")[,"el_sis_id"]) 
 api_na <- rbind(api_na, adding)
-write.csv(api_na[, c("api_binomial",	"api_id",	"el_binomial",	"el_sis_id")], file = "cache_dir/elevation_file_inconsistencies/different_scientific_name_and_different_ids.csv",
+write.csv(api_na[, c("api_binomial",	"api_id",	"el_binomial",	"el_sis_id")], file = "../aoh_out/cache_dir/elevation_file_inconsistencies/different_scientific_name_and_different_ids.csv",
           row.names = F)
 
 j_folder_elevation[j_folder_elevation$el_binomial== "Acridotheres melanopterus",]
@@ -185,17 +187,17 @@ j_folder_elevation[j_folder_elevation$el_binomial %in% missing_species,]
 #################### reorder and correct the mistakes found ##############
 j_folder_elevation <- readxl::read_excel("../IUCN_data/habitat_preferences/Updated_elevation_data_for_birds_30_Nov_2021_for_WCMC.xlsx",
                                          col_types = c("guess", rep("numeric", 5)),
-                                         na = "NA") %>% clean_names()
+                                         na = "NA") %>% janitor::clean_names()
 
-name_ids <- read.csv("cache_dir/elevation_file_inconsistencies/different_scientific_name_and_different_ids.csv",
-      stringsAsFactors = F) %>% clean_names()
+name_ids <- read.csv("../aoh_out/cache_dir/elevation_file_inconsistencies/different_scientific_name_and_different_ids.csv",
+      stringsAsFactors = F) %>% janitor::clean_names()
 
-name <- read.csv("cache_dir/elevation_file_inconsistencies/different_scientific_names_but_same_ids.csv", 
-                 stringsAsFactors = F) %>% clean_names()
+name <- read.csv("../aoh_out/cache_dir/elevation_file_inconsistencies/different_scientific_names_but_same_ids.csv", 
+                 stringsAsFactors = F) %>% janitor::clean_names()
 name$el_sis_id <- name$api_id
 
-ids <- read.csv("cache_dir/elevation_file_inconsistencies/same_scientific_name_but_different_ids.csv",
-                stringsAsFactors = F) %>% clean_names()
+ids <- read.csv("../aoh_out/cache_dir/elevation_file_inconsistencies/same_scientific_name_but_different_ids.csv",
+                stringsAsFactors = F) %>% janitor::clean_names()
 one <- rbind(name, name_ids[, names(name)])
 two <- rbind(one, ids[, names(one)])
 two
@@ -227,7 +229,7 @@ test2[is.na(test2$api_id),]
 unique(test2$api_id==test2$sis_rec_id)
 names(res)
 openxlsx::write.xlsx(res, overwrite = TRUE, 
-file = "cache_dir/elevation_file_inconsistencies/corrected_elevation_data.xlsx")
+file = "../aoh_out/cache_dir/elevation_file_inconsistencies/corrected_elevation_data.xlsx")
 
 res[!is.na(res$min_alt_new_rounded) & !is.na(res$max_alt_new_rounded), "available_elevation"] <- "yes"
 res[is.na(res$min_alt_new_rounded) | is.na(res$max_alt_new_rounded), "available_elevation"] <- "no"
@@ -249,9 +251,9 @@ sort(unique(habitats_all$code))
 #habitats_all<- hab
 habitats_all<- subset(habitats_all, bird_or_mammal == "bird")
 hab_birds1 <- read.csv(paste0(cache_dir,
-                              "manual_download/habitat_iucn/redlist_species_data_birds_except_passeriformes/habitats.csv")) %>% clean_names()
+                              "manual_download/habitat_iucn/redlist_species_data_birds_except_passeriformes/habitats.csv")) %>% janitor::clean_names()
 hab_birds2 <- read.csv(paste0(cache_dir,
-                              "manual_download/habitat_iucn/redlist_species_data_birds_passeriformes/habitats.csv")) %>% clean_names()
+                              "manual_download/habitat_iucn/redlist_species_data_birds_passeriformes/habitats.csv")) %>% janitor::clean_names()
 bir <- rbind(hab_birds1, hab_birds2)[,c("internal_taxon_id", "scientific_name",   "code")]
 names(bir) <- c("iucn_id", "iucn_sci_nam", "iucn_code")
 mer <- merge(habitats_all[,c("id_no", "code", "bird_or_mammal", "scientific_name")], bir, by.x = c("id_no", "code"), 
