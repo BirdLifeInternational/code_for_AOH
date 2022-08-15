@@ -154,5 +154,7 @@ dim(aoh_ele_hab)
 dim(data_summary_aoh)
 dim(tmp)
 
-data_summary_aoh <- tmp
-fwrite(data_summary_aoh, "rscripts/validation/pre_processing_validation/data_model_prevalence.csv")
+data_model_prevalence <- tmp
+data_model_prevalence[is.na(elevation_from_iucn), elevation_range := NA]
+data_model_prevalence[is.na(elevation_from_iucn), mid_point_elevation := NA]
+rm(list=setdiff(ls(), "data_model_prevalence"))
