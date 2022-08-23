@@ -67,7 +67,7 @@ if(model_validation == TRUE){
 }
 
 ####### Perform computations of AOH ######
-source("rscripts/aoh_jeff_4wcmc/src_files/calculate_seasonality_combinations.R")
+source(paste0(wd_path, "rscripts/aoh_jeff_4wcmc/src_files/calculate_seasonality_combinations.R"))
 bird_ids <- unique(subset(spp_summary_birds_mammals, bird_or_mammal == "bird")$id_no)
 mammal_ids <- unique(subset(spp_summary_birds_mammals, bird_or_mammal == "mammal")$id_no)
 i <- counter <- 11680
@@ -75,16 +75,19 @@ if(process_birds == TRUE){
   ids <- bird_ids
   path_lookup <- "../IUCN_data/NOT_to_be_committed/output_gpkg/birds/"
   
+  
 } else {
   ids <- mammal_ids
   path_lookup <- "../IUCN_data/NOT_to_be_committed/output_gpkg/mammals/"
 }
+path_lookup <- paste0(R.utils::getAbsolutePath(path_lookup), "/")
 all_gpkg <- list.files(path_lookup, pattern = ".gpkg$", full.names = T)
 ordered_gpkg <- file.info(all_gpkg)
-ordered_gpkg$file_name <- row.names(ordered_gpkg)
+ordered_gpkg$file_name <- str_replace(row.names(ordered_gpkg), "\\/\\/", "\\/")
 ordered_gpkg <- ordered_gpkg[order(ordered_gpkg$size), ]
 ordered_gpkg <- ordered_gpkg$file_name
 not_processed_species <- check_errors <- list()
 tmp_name <- paste0(tempdir())
 tmp_name <- str_replace_all(tmp_name, "/", "_")
 #########################################################################
+
