@@ -17,6 +17,7 @@ if(drivers[row.names(drivers) == "GPKG", "write"] == TRUE){
 ####### Specify already downloaded rasters of habitat, elevation + crosswalk combination ######
 # specify and create cache directory if needed
 cache_dir <- "../aoh_out/cache_dir/"
+cache_dir <- paste0(R.utils::getAbsolutePath(cache_dir), "/")
 # specify and create output directory
 
 if(process_birds){
@@ -24,6 +25,7 @@ if(process_birds){
 } else {
   baseline <- paste0("../aoh_out/output_R/mammals/")  
 }
+baseline <- paste0(R.utils::getAbsolutePath(baseline), "/")
 
 output_dir <- paste0(baseline, "lumbierres_", type, "/")
 output_area <- paste0(baseline, "lumbierres_", type, "/area/")
