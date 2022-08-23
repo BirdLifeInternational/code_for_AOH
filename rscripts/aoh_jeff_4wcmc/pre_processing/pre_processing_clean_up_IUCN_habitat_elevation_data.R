@@ -210,7 +210,8 @@ tmp <- merge(missing_marine, birds_elevation, all.x =T, by.x = "id_no", by.y = "
 tmp3 <- tmp2[tmp2$bird_life_scientific_name_2020 %in% tmp$bird_life_scientific_name_2020, c("bird_life_scientific_name_2020", "id_no", "sis_rec_id")]
 tmp3[is.na(tmp3$id_no),]
 # These are changed taxonomy!
-write_csv(missing_marine, file = "report_code_chunks/missing_info_about_terrestrial.csv")
+write_csv(missing_marine, file = "../aoh_out/cache_dir/birds_missing_info_about_terrestrial.csv")
+
 # for the species with missing information assume they are not terrestrial
 
 ensemb[is.na(ensemb$terrestrial), "terrestrial"] <- "false"
@@ -396,7 +397,7 @@ imputing <- unique(habitats2[is.na(habitats2$migrant_in_iucn) & !is.na(habitats2
 imputing <- unique(merge(imputing, all_nams[,c("id_no",	"scientific_name",	"common_name")], all.x =  T))
 # species with no polygons no range map
 habitats2[is.na(habitats2$migrant_in_iucn) & is.na(habitats2$migrant_poly_combined),]
-write_csv(imputing, "report_code_chunks/imputed_movement_patterns.csv")
+write_csv(imputing, "../aoh_out/cache_dir/manual_download/imputed_movement_patterns.csv")
 # note that marine mammals have habitats2$combined_season_polygon == NA
 unique(habitats2[is.na(habitats2$migrant_in_iucn) & is.na(habitats2$migrant_poly_combined) & !is.na(habitats2$combined_season_polygon), 
                  c(
@@ -424,7 +425,8 @@ habitats_all <- habitats2
 unique(habitats2$migrant_in_iucn)
 
 
-habitats2[which(habitats2$migrant_in_iucn== "not-migrant"), "migrant_in_iucn"] <- "not_migrant"
+habitats2[which(habitats2$migrant_in_iucn == "not-migrant"), "migrant_in_iucn"] <- "not_migrant"
+habitats2[is.na(habitats2$migrant_in_iucn), "migrant_in_iucn"] <- "not_migrant"
 write_csv(habitats2, 
           file = paste0(cache_dir, "manual_download/spp_habitat_data_birds_mammals.csv"),
           col_names = T, append = FALSE)
