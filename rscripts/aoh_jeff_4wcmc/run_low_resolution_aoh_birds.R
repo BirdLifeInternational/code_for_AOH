@@ -13,7 +13,7 @@ source("rscripts/list_libraries.R")
 verbose_value <- FALSE # set to FALSE if you don't want aoh pckg to display progress
 # Technical details #
 n_threads <- 1 # use multiple threads within aoh package
-n_cores <- 10 # set the number of cores for mclapply
+n_cores <- 20 # set the number of cores for mclapply
 cache_limit <- 5000 # set to 5000 when running the whole species. 
 ###### Source the code #######
 source("rscripts/aoh_jeff_4wcmc/src_files/aoh_with_lapply.R")
