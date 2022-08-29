@@ -13,17 +13,21 @@ aoh_computation <- function(X = i, ordered_gpkg = ordered_gpkg, path_lookup = pa
          
          cache_limit = cache_limit,
          verbose_value = verbose_value,
-         eng = eng){
+         eng = eng,
+         taxon_id = -10){
   i <- X
   skip_to_next <- FALSE
   
   #print("================================================================")
   #print("================================================================")
-  file_to_process <- ordered_gpkg[i]
-  taxon_id <- str_replace(file_to_process, paste0(path_lookup, "id_no_"), "")
-  taxon_id <- str_replace(taxon_id, paste0(path_lookup, "/id_no_"), "")
-  taxon_id <- as.numeric(str_replace(taxon_id, ".gpkg", ""))
-
+  if(taxon_id != -10){
+    file_to_process <- ""
+  } else {
+    file_to_process <- ordered_gpkg[i]
+    taxon_id <- str_replace(file_to_process, paste0(path_lookup, "id_no_"), "")
+    taxon_id <- str_replace(taxon_id, paste0(path_lookup, "/id_no_"), "")
+    taxon_id <- as.numeric(str_replace(taxon_id, ".gpkg", ""))
+  }
   if(!any(spp_summary_birds_mammals$id_no == taxon_id)){
     msg <- paste0("Skipping taxon id ", taxon_id, " because excluded a priori from the calculations")
     fwrite(data.table(msg = msg), file = paste0(output_errors, "msg_", i, ".csv"))
@@ -43,7 +47,13 @@ aoh_computation <- function(X = i, ordered_gpkg = ordered_gpkg, path_lookup = pa
   file_both <- paste0(updated_path, taxon_id, "_Breeding_and_Nonbreeding.tif")
   
   
-  if(!model_validation && (file.exists(file_bred) & file.exists(file_nonb))){
+  if(!model_validation && type == "LR" && 
+     (file.exists(file_bred) & file.exists(file_nonb) & file.exists(file_both))
+     ){
+    msg <- paste0("Skipping taxon id ", taxon_id, " with index ", i, "; species already processed.")
+    fwrite(data.table(msg = msg), file = paste0(output_errors, "msg_", i, ".csv"))
+    return(taxon_id);
+  } else if(!model_validation && type == "FRC" && (file.exists(file_bred) & file.exists(file_nonb))){
     msg <- paste0("Skipping taxon id ", taxon_id, " with index ", i, "; species already processed.")
     fwrite(data.table(msg = msg), file = paste0(output_errors, "msg_", i, ".csv"))
     return(taxon_id);
@@ -51,7 +61,9 @@ aoh_computation <- function(X = i, ordered_gpkg = ordered_gpkg, path_lookup = pa
     msg <- paste0("Skipping taxon id ", taxon_id, " with index ", i, "; species already processed.")
     fwrite(data.table(msg = msg), file = paste0(output_errors, "msg_", i, ".csv"))
     return(taxon_id);
-  }
+  } # else {
+  #   stop("check combinations of type and validation to assert if species were already processed")
+  # }
   
   if(file.exists(file_res)){
     msg <- paste0("Skipping taxon id ", taxon_id, " with index ", i, "; species already processed.")
@@ -119,10 +131,13 @@ aoh_computation <- function(X = i, ordered_gpkg = ordered_gpkg, path_lookup = pa
   
   if(any(names(spp_range_data) == "terrestial")) names(spp_range_data)[names(spp_range_data) == "terrestial"] <- "terrestrial"
   
-  spp_range_data$terrestrial <- rep("true", nrow(spp_range_data))
-  spp_range_data$marine <- rep("false", nrow(spp_range_data))
-  spp_range_data$freshwater <- rep("false", nrow(spp_range_data))
+  # spp_range_data$terrestrial <- rep("true", nrow(spp_range_data))
+  # spp_range_data$marine <- rep("false", nrow(spp_range_data))
+  # spp_range_data$freshwater <- rep("false", nrow(spp_range_data))
+  spp_range_data <- subset(spp_range_data, presence == 1 | presence == 2)
+  spp_range_data <- subset(spp_range_data, origin == 1 | origin == 2 | origin == 6)
 
+  
   if((!"binomial" %in% colnames(spp_range_data)) & ("sci_name"  %in% colnames(spp_range_data))){
     spp_range_data$binomial <- spp_range_data$sci_name
   } else if ((!"binomial" %in% colnames(spp_range_data)) & (!"sci_name"  %in% colnames(spp_range_data))){
@@ -167,6 +182,53 @@ aoh_computation <- function(X = i, ordered_gpkg = ordered_gpkg, path_lookup = pa
     } 
   }
   if(skip_to_next) {return(taxon_id)}
+  # combine seasonalities according to KBA guidelines
+  if(migratory_status){
+    bred <- subset(spp_range_data, seasonal == 1 | seasonal == 2 | seasonal == 5)
+    bred$seasonal <- 2
+    nonbred <- subset(spp_range_data, seasonal == 1 | seasonal == 3 | seasonal == 5)
+    nonbred$seasonal <- 3
+    bred <- bred %>% 
+      group_by(seasonal) %>%
+      summarise(geometry = sf::st_union(geometry), 
+                sci_name = unique(spp_range_data$sci_name),
+                id_no = unique(spp_range_data$id_no),
+                seasonal = 2,
+                presence = 1, origin = 1, 
+                terrestrial = "true", marine = "false", freshwater = "false"
+      ) %>% ungroup()
+    
+    nonbred <- nonbred %>% 
+      group_by(seasonal) %>%
+      summarise(geometry = sf::st_union(geometry), 
+                sci_name = unique(spp_range_data$sci_name),
+                id_no = unique(spp_range_data$id_no),
+                seasonal = 3,
+                presence = 1, origin = 1, 
+                terrestrial = "true", marine = "false", freshwater = "false") %>%  ungroup()
+    
+    spp_range_data <- rbind(bred, nonbred)
+    rm(bred, nonbred)
+    
+  } else if(!migratory_status){
+    resi <- spp_range_data
+    resi$seasonal <- 1
+    
+    resi <- resi %>% 
+      group_by(seasonal) %>%
+      summarise(geometry = sf::st_union(geometry), 
+                sci_name = unique(spp_range_data$sci_name),
+                id_no = unique(spp_range_data$id_no),
+                seasonal = 1,
+                presence = 1, origin = 1, 
+                terrestrial = "true", marine = "false", freshwater = "false"
+      ) %>% ungroup()
+    spp_range_data <- resi
+    rm(resi)
+  }
+  #print("summary merged spp_range_data")
+  #print(unique(st_drop_geometry(spp_range_data)[, c("id_no", "seasonal", "presence", "origin")]))
+  
   # run the aoh code
   #### create data to read within aoh calculation ####
   if(unique(st_geometry_type(spp_range_data)) == "MULTISURFACE"){
@@ -366,7 +428,7 @@ aoh_computation <- function(X = i, ordered_gpkg = ordered_gpkg, path_lookup = pa
                         output_area = output_area)
   } 
   # clean up
-  unlink(files_aoh, recursive = T)
+  if(file.exists(files_aoh[1]))  unlink(files_aoh, recursive = T)
   if(file.exists(files_aoh[1])){
     files_aoh <- str_replace_all(files_aoh, "\\/\\/", "\\/")
     unlink(files_aoh, recursive = T)
