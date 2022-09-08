@@ -140,6 +140,8 @@ aoh_computation <- function(X = i, ordered_gpkg = ordered_gpkg, path_lookup = pa
   
   if((!"binomial" %in% colnames(spp_range_data)) & ("sci_name"  %in% colnames(spp_range_data))){
     spp_range_data$binomial <- spp_range_data$sci_name
+  } else if (("binomial" %in% colnames(spp_summary_data)) & (!"sci_name"  %in% colnames(spp_range_data))){
+    spp_range_data$binomial <- spp_range_data$sci_name <- unique(spp_summary_data$binomial)
   } else if ((!"binomial" %in% colnames(spp_range_data)) & (!"sci_name"  %in% colnames(spp_range_data))){
     msg <- paste0("Cannot process taxon id ", taxon_id, " | no scientific name available for taxon id ", taxon_id)
     fwrite(data.table(msg = msg), file = paste0(output_errors, "msg_", i, ".csv"))
@@ -182,6 +184,12 @@ aoh_computation <- function(X = i, ordered_gpkg = ordered_gpkg, path_lookup = pa
     } 
   }
   if(skip_to_next) {return(taxon_id)}
+  if(!(any(names(spp_range_data) == "sci_name")) | !(any(names(spp_range_data) == "id_no"))) {
+    msg <- paste0("Warning for taxon id ", taxon_id, " sci_name and/or id_no not available from range map")
+    fwrite(data.table(msg = msg), file = paste0(output_errors, "msg_", i, ".csv"))
+    return(0)
+  }
+
   # combine seasonalities according to KBA guidelines
   if(migratory_status){
     bred <- subset(spp_range_data, seasonal == 1 | seasonal == 2 | seasonal == 5)
@@ -371,7 +379,7 @@ aoh_computation <- function(X = i, ordered_gpkg = ordered_gpkg, path_lookup = pa
                         output_errors = output_errors, 
                         spp_summary_data = spp_summary_data,
                         output_area = output_area)
-
+	    print("resident done")
     
   }
   if(migratory_status && !model_validation){
@@ -387,7 +395,7 @@ aoh_computation <- function(X = i, ordered_gpkg = ordered_gpkg, path_lookup = pa
                         spp_summary_data = spp_summary_data,
                         output_area = output_area)
 
-    
+    print("breeding done")
     check_combo <- combo$non_breeding
     text_file <- "Nonbreeding"
     combine_seasonality(check_combo = check_combo, 
@@ -399,7 +407,7 @@ aoh_computation <- function(X = i, ordered_gpkg = ordered_gpkg, path_lookup = pa
                         output_errors = output_errors, 
                         spp_summary_data = spp_summary_data,
                         output_area = output_area)
-
+	    print("non breeding done")
     if(str_detect(type, "LR")){
       check_combo <- combo$validation_migrant 
       text_file <- "Breeding_and_Nonbreeding"
@@ -412,6 +420,7 @@ aoh_computation <- function(X = i, ordered_gpkg = ordered_gpkg, path_lookup = pa
                           output_errors = output_errors, 
                           spp_summary_data = spp_summary_data,
                           output_area = output_area)
+                              print("breeding +nonbreeding done")
     }
     
   } else if(migratory_status && model_validation){
@@ -428,16 +437,16 @@ aoh_computation <- function(X = i, ordered_gpkg = ordered_gpkg, path_lookup = pa
                         output_area = output_area)
   } 
   # clean up
-  if(file.exists(files_aoh[1]))  unlink(files_aoh, recursive = T)
-  if(file.exists(files_aoh[1])){
-    files_aoh <- str_replace_all(files_aoh, "\\/\\/", "\\/")
-    unlink(files_aoh, recursive = T)
-  }
+  #if(file.exists(files_aoh[1]))  unlink(files_aoh, recursive = T)
+  #if(file.exists(files_aoh[1])){
+  #  files_aoh <- str_replace_all(files_aoh, "\\/\\/", "\\/")
+   # unlink(files_aoh, recursive = T)
+ # }
   rm(files_aoh, save_res_aoh)
   rm(spp_aoh, spp, spp_range_data)
   rm(check_combo, combo, spp_info_data, string_1, string_2, string_3, string_4, string_5)    
   rm(file_bred, file_nonb, file_res, file_to_process)
   save(not_processed_species, file = paste0(output_errors, "not_processed_species", tmp_name, ".RData"))
-  
+  if(exists("msg")) rm(msg)
   return(taxon_id)
 }
