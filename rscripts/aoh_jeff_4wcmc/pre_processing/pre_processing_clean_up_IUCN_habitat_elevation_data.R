@@ -57,7 +57,7 @@ mammals_nams <- unique(hab_mammals[, c("id_no", "scientific_name", "name")])
 names(mammals_nams)[names(mammals_nams)=="name"] <- "common_name"
 mammals_nams$order <- rep("mammal", nrow(mammals_nams))
 all_names <- unique(rbind(birds_nams[, names(mammals_nams)], mammals_nams))
-attr_table <- read.csv("../IUCN_original_shapefiles/NOT_to_be_committed/BOTW/attribute_table/attribute_table.csv")
+attr_table <- read.csv("../IUCN_data/NOT_to_be_committed/BOTW/attribute_table/attribute_table.csv")
 attr_table <-  attr_table[, c("id_no", "sci_name")]
 tmp <- merge(all_names, attr_table, all = T)
 tmp[is.na(tmp$scientific_name) & tmp$order == "bird",]
@@ -138,7 +138,7 @@ ensemb <- merge(el_all, cat_all_2, all = T)
 names(ensemb)[names(ensemb) == "internal_taxon_id"] <- "id_no"
 names(ensemb)[names(ensemb) == "elevation_upper_limit"] <- "elevation_upper"
 names(ensemb)[names(ensemb) == "elevation_lower_limit"] <- "elevation_lower"
-ensemb$elevation_from_iucn <- ifelse(!is.na(ensemb$elevation_lower) & !is.na(ensemb$elevation_upper), "yes", "no")
+ensemb$elevation_from_iucn <- ifelse(!is.na(ensemb$elevation_lower) | !is.na(ensemb$elevation_upper), "yes", "no")
 
 ##### check wrong/missing elevations #####
 any(ensemb$elevation_upper < ensemb$elevation_lower)
@@ -223,6 +223,7 @@ ensemb <- merge(ensemb2, realms, by = "id_no", all.x = T)
 dim(ensemb)
 dim(ensemb1)
 dim(ensemb2)
+ensemb <- ensemb[!is.na(ensemb$binomial),]
 write_csv(ensemb, paste0(cache_dir, "manual_download/spp_summary_birds_mammals.csv"), col_names = T)
 ############habitats ############
 #  Habitat data from internal Birdlife drive
