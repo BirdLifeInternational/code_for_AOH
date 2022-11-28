@@ -58,7 +58,7 @@ hb_iucn_code <- data.frame(season =
 ####### When doing model validation set parameters #####
 if(model_validation == TRUE){
   spp_summary_birds_mammals <- subset(spp_summary_birds_mammals, elevation_from_iucn == "yes")
-  if(elevation_only == TRUE){
+  if(habitat_only == TRUE){
     spp_summary_birds_mammals$elevation_lower <- -500
     spp_summary_birds_mammals$elevation_upper <- 9000
   } 
