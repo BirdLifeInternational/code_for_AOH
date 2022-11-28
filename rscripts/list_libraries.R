@@ -15,18 +15,22 @@ library(dplyr)
 #library(tictoc)
 library(stringr)
 library(data.table)
+library(foreach)
+library(gdalUtilities)
+library(gdalUtils)
 #library(parallel)
 # for the validation protocol
-library(insight)
-library(lme4)
-library(glmmTMB)
-library(rlist)
-
-
-library(foreach) 
-library(cluster)
-#library(doParallel)
-library(doSNOW)
+# library(insight)
+# library(lme4)
+# library(glmmTMB)
+# library(rlist)
+# library(rethinking)
+# 
+# 
+# library(foreach) 
+# library(cluster)
+# #library(doParallel)
+# library(doSNOW)
 
 # library(aoh)
 # library(terra)
