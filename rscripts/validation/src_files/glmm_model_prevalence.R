@@ -1,13 +1,29 @@
 # model prevalence with random effect of choice
-data_model_prevalence$random_variable <- data_model_prevalence[, c(random_variable)]
-#data_model_prevalence <- subset(data_model_prevalence, bird_or_mammal == class)
-summary(data_model_prevalence)
-model <- glmmTMB::glmmTMB(cbind(suitable_num_pix, total_num_pix) ~
+
+dat <- subset(dat, seasonality == "Resident" | seasonality == "Breeding_and_Nonbreeding")
+dat <- subset(dat, bird_or_mammal == "mammal")
+summary(dat)
+dat$total_num_pix = round(dat$total_num_pix_seasonal_range_map / 1000)
+dat$ss = round(dat$suitable_num_pix/1000)
+dat <- dat[total_num_pix>0,]
+library(lme4)
+model <- glm(cbind(ss, total_num_pix) ~
+          scale(count_hab_full)+scale(elevation_range) + 
+          scale(mid_point_elevation)+
+            realm+
+          seasonality,
+        #weights = total_num_pix,
+        data = dat,
+        family = binomial, na.action = na.exclude)
+
+
+model <- glmmTMB::glmmTMB(obs_mdl_prevalence ~
                             scale(count_hab_full)+scale(elevation_range) + 
                             scale(mid_point_elevation)+realm+
-                            seasonality + (1 | bird_or_mammal/random_variable),
-                          data = data_model_prevalence,
-                          family = binomial(link = "logit"))#, na.action = na.exclude)
+                            seasonality + (1 | family_name),
+                          weights = total_num_pix,
+                          data = dat,
+                          family = binomial(link = "logit"), na.action = na.exclude)
 
 vars <- insight::get_variance(model)
 r2_marginal <- vars$var.fixed / (vars$var.fixed + vars$var.random + vars$var.residual) 
@@ -33,9 +49,9 @@ save(model, file = paste0(oo_dir, "model_glmmTMB_", random_variable, ".RData"))
 
 prd_family_RE <- predict(model, type = "response")
 prd_family_RE <- as.data.frame(prd_family_RE)
-with_predictions <- as.data.table(cbind(data_model_prevalence, round(prd_family_RE, 3)))
+with_predictions <- as.data.table(cbind(dat, round(prd_family_RE, 3)))
 
-png(paste0(oo_dir, "plot_obs_pred_model_prevalence_", random_variable, ".png"))
+png(paste0(oo_dir, "plot_obs_pred_model_prevalence_bird.png"))
 plot(x = with_predictions$model_prevalence, y = with_predictions$prd_family_RE,
      xlab = "Observed model prevalence",
      ylab = "Predicted model prevalence", 
@@ -45,8 +61,8 @@ dev.off()
 # Outliers detection:: 
 
 with_predictions[, prd_family_RE := round(prd_family_RE, 3), ]
-with_predictions[, model_prevalence := round(model_prevalence, 3),]
-with_predictions[ , difference := model_prevalence-prd_family_RE,]
+with_predictions[, obs_mdl_prevalence := round(obs_mdl_prevalence, 3),]
+with_predictions[ , difference := obs_mdl_prevalence-prd_family_RE,]
 lowerq = quantile(with_predictions$difference,na.rm = T)[2]
 upperq = quantile(with_predictions$difference,na.rm = T)[4]
 iqr = upperq - lowerq
@@ -70,11 +86,13 @@ names(with_predictions)
 
 with_predictions <- with_predictions[, c("id_no", "seasonality",  
                                          "predicted_mdl_prevalence", 
-                                         "mild_outliers", "extreme_outliers", "mdl_intqrt_thresh",
-                                         "aoh_habitat_mdl_prevalence", "aoh_elevation_mdl_prevalence")]
+                                         "mild_outliers", "extreme_outliers", "mdl_intqrt_thresh")]
 
 
-
-outliers <- subset(with_predictions, mild_outliers)
-fwrite(outliers, paste0(oo_dir, "outliers_model_prevalence_", random_variable, "_as_random_effect.csv"))
-fwrite(with_predictions, paste0(oo_dir, "results_model_prevalence_", random_variable, "_as_random_effect.csv"))
+class= "bird"
+class = "mammal"
+fwrite(with_predictions, paste0("../aoh_out/output_R/validation/results_model_prevalence_", class, ".csv"))
+bi = fread(paste0("../aoh_out/output_R/validation/results_model_prevalence_bird.csv"))
+mam = fread(paste0("../aoh_out/output_R/validation/results_model_prevalence_mammal.csv"))
+pred <- rbind(bi, mam)
+fwrite(pred, "../aoh_out/output_R/validation/results_model_prevalence.csv")

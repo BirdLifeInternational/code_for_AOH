@@ -19,6 +19,10 @@ verbose_value <- FALSE # set to FALSE if you don't want aoh pckg to display prog
 n_threads <- 1 # use multiple threads within aoh package
 n_cores <- 10 # set the number of cores for mclapply 
 cache_limit <- 5000 # set to 5000 when running the whole species. 
+
+projection <- "epsg4326" # wgs84
+projection <- "esri54009" # Glob. Mollweide
+projection <- "esri54017" # World_Behrmann
 ###### Source the code #######
 source("rscripts/aoh_jeff_4wcmc/src_files/aoh_with_lapply.R")
 
