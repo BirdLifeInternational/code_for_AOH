@@ -9,14 +9,18 @@
 #'
 # Pick directories and input files
 wd_path <- paste0(getwd(), "/")
-source(paste0(wd_path, "rscripts/aoh_jeff_4wcmc/src_files/set_directories.R"))
-source(paste0(wd_path, "rscripts/aoh_jeff_4wcmc/src_files/read_data_aoh.R"))
+source("rscripts/aoh_jeff_4wcmc/src_files/set_directories.R")
+source("rscripts/aoh_jeff_4wcmc/src_files/read_data_aoh.R")
 #"================================================================"
 # Read in functions
-source(paste0(wd_path, "rscripts/aoh_jeff_4wcmc/src_files/correct_season_mismatch.R"))
-source(paste0(wd_path, "rscripts/aoh_jeff_4wcmc/src_files/calculate_area.R"))
-source(paste0(wd_path, "rscripts/aoh_jeff_4wcmc/src_files/combine_seasonality.R"))
-source(paste0(wd_path, "rscripts/aoh_jeff_4wcmc/src_files/aoh_computations.R"))
+source("rscripts/aoh_jeff_4wcmc/src_files/correct_season_mismatch.R")
+source("rscripts/aoh_jeff_4wcmc/src_files/calculate_area.R")
+source("rscripts/aoh_jeff_4wcmc/src_files/combine_seasonality.R")
+source("rscripts/aoh_jeff_4wcmc/src_files/aoh_computations.R")
+source("rscripts/aoh_jeff_4wcmc/src_files/summarize_habitat_codes_unsuitable_habitat.R")
+gdalUtils::gdal_setInstallation()
+valid_install <- !is.null(getOption("gdalUtils_gdalPath"))
+if(!valid_install) stop("Gdal not linked")
 #"================================================================"
 #"================================================================"
 #"================================================================"
@@ -27,10 +31,48 @@ source(paste0(wd_path, "rscripts/aoh_jeff_4wcmc/src_files/aoh_computations.R"))
 #"================================================================"
 ##### apply codein parallel ####
 ##### apply codein parallel ####
-n_cores = 20
+
 library(foreach)
-res <- foreach(X = 1:length(ordered_gpkg), .errorhandling= "pass") %do% {
+# library(doSNOW)
+
+
+# n_cores = 10
+# res <- parallel::mclapply(X = 1:length(ordered_gpkg), 
+#                           FUN = aoh_computation, ordered_gpkg = ordered_gpkg, path_lookup = path_lookup,
+#                           spp_summary_birds_mammals = spp_summary_birds_mammals,
+#                           spp_habitat_birds_mammals = spp_habitat_birds_mammals,
+#                           updated_path = updated_path,
+#                           model_validation = model_validation,
+#                           cache_dir = cache_dir,
+#                           verbose_value = verbose_value,
+#                           elevation_data = elevation_data,
+#                           output_dir = output_dir,
+#                           habitat_data = habitat_data,
+#                           crosswalk_data = crosswalk_data,
+#                           n_threads = n_threads,
+#                           cache_limit = cache_limit,
+#                           eng = eng, mc.cores = n_cores)
+
+
+
+# cl <- makeCluster(n_cores, type = "SOCK")
+# registerDoSNOW(cl)# 
+res <- foreach(X = 1:length(ordered_gpkg),
+               .errorhandling = "pass"
+               # .inorder = FALSE,
+               # .packages = c("aoh",
+               #               "terra",
+               #               "sf",
+               #               "stars",
+               #               "tidyverse",
+               #               "janitor",
+               #               "dplyr",
+               #               "stringr",
+               #               "data.table","R.utils",                                                       "gdalUtilities",
+               #               "gdalUtils")
+               ) %do% {
   print(paste0("X = ", X))
+  if(exists("msg")) rm(msg)
   aoh_computation(X, ordered_gpkg = ordered_gpkg, path_lookup = path_lookup,
                   spp_summary_birds_mammals = spp_summary_birds_mammals,
                   spp_habitat_birds_mammals = spp_habitat_birds_mammals,
@@ -40,15 +82,18 @@ res <- foreach(X = 1:length(ordered_gpkg), .errorhandling= "pass") %do% {
                   verbose_value = verbose_value,
                   elevation_data = elevation_data,
                   output_dir = output_dir,
+                  output_df = output_df,
                   habitat_data = habitat_data,
                   crosswalk_data = crosswalk_data,
                   n_threads = n_threads,
                   cache_limit = cache_limit,
                   eng = eng)
+  print("========================================================")
   
 }
-
-
+# 
+# stopCluster(cl)
+# print("parallel cluster closed")
 
 
 # still doesn't work with dopar 
