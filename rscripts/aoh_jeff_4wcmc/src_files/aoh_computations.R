@@ -15,7 +15,8 @@ aoh_computation <- function(X = i, ordered_gpkg = ordered_gpkg, path_lookup = pa
          cache_limit = cache_limit,
          verbose_value = verbose_value,
          eng = eng,
-         taxon_id = -10){
+         taxon_id = -10,
+	 geometry_precision = 1e5){
   i <- X
   skip_to_next <- FALSE
   
@@ -297,7 +298,11 @@ aoh_computation <- function(X = i, ordered_gpkg = ordered_gpkg, path_lookup = pa
         
       }
     }  
-    bred <- st_transform(bred, crs = pr_crs)
+    bred = sf::st_set_precision(bred, geometry_precision)
+    bred <- sf::st_transform(bred, crs = pr_crs) 
+    invisible(gc())
+    bred <- st_repair_geometry(bred, geometry_precision)
+    invisible(gc())
     bred$sci_name <- bred$binomial <- unique(spp_range_data$sci_name)
 
     bred$id_no = unique(spp_range_data$id_no)
@@ -341,7 +346,11 @@ aoh_computation <- function(X = i, ordered_gpkg = ordered_gpkg, path_lookup = pa
         #nonbred <- st_transform(nonbred, crs = pr_crs)
       }
     }   
-    nonbred <- st_transform(nonbred, crs = pr_crs)
+    nonbred = sf::st_set_precision(nonbred, geometry_precision)
+    nonbred <- sf::st_transform(nonbred, crs = pr_crs) 
+    invisible(gc())
+    nonbred <- st_repair_geometry(nonbred, geometry_precision)
+    invisible(gc())
     nonbred$sci_name <- nonbred$binomial <- unique(spp_range_data$sci_name)
     nonbred$id_no = unique(spp_range_data$id_no)
     nonbred$seasonal <- 3
@@ -394,7 +403,11 @@ aoh_computation <- function(X = i, ordered_gpkg = ordered_gpkg, path_lookup = pa
 
       }
     }
-    resi <- st_transform(resi, crs = pr_crs)
+    resi = sf::st_set_precision(resi, geometry_precision)
+    resi <- sf::st_transform(resi, crs = pr_crs) 
+    invisible(gc())
+    resi <- st_repair_geometry(resi, geometry_precision)
+    invisible(gc())
     
     resi$sci_name <- resi$binomial <- unique(spp_range_data$sci_name)
  
